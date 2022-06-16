@@ -6,12 +6,13 @@ import {
   InfiniteScroll,
   CheckList,
 } from 'antd-mobile';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useInfiniteQuery } from 'react-query';
+import { fetch } from '@xforceplus/standard-http-request';
 import { debounce } from 'lodash';
 
-const CustomSelector = (props) =>{
+export default function CustomSelector(props) {
   const {
-    defaultValue = [],
     mode,
     multiple = false,
     onConfirm,
@@ -20,8 +21,8 @@ const CustomSelector = (props) =>{
     fieldLabel,
     fieldName,
     rules,
-    searchProps = {},
-    listProps = {},
+    searchProps,
+    listProps,
   } = props;
 
   const {
@@ -40,77 +41,61 @@ const CustomSelector = (props) =>{
     pageSize = 20,
   } = pagination;
 
+  let { defaultValue  } = props;
+  if (!defaultValue || (defaultValue && !Array.isArray(defaultValue))){
+    defaultValue = [];
+  }
+
   const [visible, setVisible] = useState(false);
   const [searchName, setSearchName] = useState('');
   const [selected, setSelected] = useState(defaultValue);
   const [selectedValues, setSelectedValues] = useState(
-    defaultValue || [],
+    defaultValue,
   );
 
   const [lastSelected, setLastSelected] = useState(defaultValue);
 
-  // const { data, refetch, fetchNextPage, hasNextPage } = useInfiniteQuery(
-  //   ['search'],
-  //   ({ pageParam = { [pageNoName]: pageNo, [pageSizeName]: pageSize } }) => {
-  //     const req = {
-  //       url,
-  //       method,
-  //     };
-  //
-  //     req.params = {
-  //       ...pageParam,
-  //       [searchTextName]: searchName,
-  //       ...params,
-  //     };
-  //
-  //     if (body) {
-  //       req.body = { ...body };
-  //     }
-  //
-  //     if (mode === "test") {
-  //       let testData = [];
-  //       for (let i = 1; i < 21; i++) {
-  //         testData.push({name: `test data ${1}`, value: `test_data_${i}`});
-  //       }
-  //
-  //       return {
-  //         data: {
-  //           pages:
-  //             [
-  //               { result: testData}
-  //             ]
-  //         },
-  //         refetch: () => {},
-  //         fetchNextPage: () => {},
-  //         hasNextPage: false
-  //       }
-  //     }
-  //     return fetch(req).then((res) => res.data);
-  //   },
-  //   {
-  //     cacheTime: 0,
-  //     keepPreviousData: true,
-  //     getNextPageParam: (lastPage) =>
-  //       lastPage.result.length < +lastPage[pageSizeName]
-  //         ? undefined
-  //         : {
-  //           [pageNoName]: +lastPage[pageNoName] + 1,
-  //           [pageSizeName]: +lastPage[pageSizeName],
-  //         },
-  //     onSuccess(infData) {
-  //       console.log(1111, JSON.stringify(infData));
-  //       return infData;
-  //     },
-  //   },
-  // );
+  let { data, refetch, fetchNextPage, hasNextPage } = useInfiniteQuery(
+    ['search'],
+    ({ pageParam = { [pageNoName]: pageNo, [pageSizeName]: pageSize } }) => {
+      const req = {
+        url,
+        method,
+      };
 
-  let data = [];
+      req.params = {
+        ...pageParam,
+        [searchTextName]: searchName,
+        ...params,
+      };
+
+      if (body) {
+        req.body = { ...body };
+      }
+
+      return fetch(req).then((res) => res.data);
+    },
+    {
+      cacheTime: 0,
+      keepPreviousData: true,
+      getNextPageParam: (lastPage) =>
+        lastPage.result.length < +lastPage[pageSizeName]
+          ? undefined
+          : {
+            [pageNoName]: +lastPage[pageNoName] + 1,
+            [pageSizeName]: +lastPage[pageSizeName],
+          },
+      onSuccess(infData) {
+        return infData;
+      },
+    },
+  );
+
   if (mode === "test") {
     let testData = [];
     for (let i = 1; i < 21; i++) {
       testData.push({name: `test data ${i}`, value: `test_data_${i}`});
     }
-
     data = {
       pages:
         [
@@ -119,9 +104,9 @@ const CustomSelector = (props) =>{
     }
   }
 
-  // useEffect(() => {
-  //   refetch();
-  // }, [searchName]);
+  useEffect(() => {
+    refetch();
+  }, [searchName]);
 
   const handleClosePopup = () => {
     setVisible(false);
@@ -182,8 +167,8 @@ const CustomSelector = (props) =>{
   const handleConfirm = () => {
     if (onConfirm) {
       onConfirm(selected, fieldName);
-      setLastSelected(selected);
     }
+    setLastSelected(selected);
     setVisible(false);
   };
 
@@ -283,10 +268,10 @@ const CustomSelector = (props) =>{
             )),
           )}
         </CheckList>
-        {/*<InfiniteScroll*/}
-        {/*  loadMore={fetchNextPage}*/}
-        {/*  hasMore={!!hasNextPage}*/}
-        {/*/>*/}
+        <InfiniteScroll
+          loadMore={fetchNextPage}
+          hasMore={!!hasNextPage}
+        />
       </div>
       <div
         style={{
@@ -324,121 +309,121 @@ const CustomSelector = (props) =>{
         borderRight: 'solid 10px #1677ff',
       }}
     >
-      <svg
-        width="8.5px"
-        height="6.5px"
-        viewBox="0 0 17 13"
-        version="1.1"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <g
-          stroke="none"
-          strokeWidth="1"
-          fill="none"
-          fillRule="evenodd"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+      <div style={{transform: "translateY(-10px)"}}>
+        <svg
+          width="8.5px"
+          height="6.5px"
+          viewBox="0 0 17 13"
+          version="1.1"
+          xmlns="http://www.w3.org/2000/svg"
         >
           <g
-            transform="translate(-2832.000000, -1103.000000)"
-            stroke="#FFFFFF"
-            strokeWidth="3"
+            stroke="none"
+            strokeWidth="1"
+            fill="none"
+            fillRule="evenodd"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           >
-            <g transform="translate(2610.000000, 955.000000)">
-              <g transform="translate(24.000000, 91.000000)">
-                <g transform="translate(179.177408, 36.687816)">
-                  <polyline points="34.2767388 22 24.797043 31.4796958 21 27.6826527"></polyline>
+            <g
+              transform="translate(-2832.000000, -1103.000000)"
+              stroke="#FFFFFF"
+              strokeWidth="3"
+            >
+              <g transform="translate(2610.000000, 955.000000)">
+                <g transform="translate(24.000000, 91.000000)">
+                  <g transform="translate(179.177408, 36.687816)">
+                    <polyline points="34.2767388 22 24.797043 31.4796958 21 27.6826527"></polyline>
+                  </g>
                 </g>
               </g>
             </g>
           </g>
-        </g>
-      </svg>
+        </svg>
+      </div>
     </div>
   );
 
   return (
     <div>
-      <Form>
-        <Form.Item label={fieldLabel} name={fieldName} rules={rules}>
-          {selected.length > 0 ? (
-            <>
-              {selected.length > 1 ? (
-                <div
-                  className="selectedClass"
-                  onClick={handleFocus}
-                  style={{
-                    overflow: 'auto',
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  {selected.map((s) => (
-                    <div
-                      key={s[uniqueId]}
-                      style={{
-                        fontSize: '14px',
-                        color: '#1677ff',
-                        background: '#e7f1ff',
-                        height: '37px',
-                        padding: '8px 16px',
-                        border: 'none',
-                        borderRadius: '2px',
-                        margin: '0px 10px 5px 0px',
-                        position: 'relative',
-                      }}
-                    >
-                      {s[label]}
-                      {checkedPic}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div
-                  className="selectedClass"
-                  onClick={handleFocus}
-                  style={{ height: '37px', display: 'flex', flexWrap: 'wrap' }}
-                >
-                  {selected.map((s) => (
-                    <div
-                      key={s[uniqueId]}
-                      style={{
-                        fontSize: '14px',
-                        color: '#1677ff',
-                        background: '#e7f1ff',
-                        height: '37px',
-                        padding: '8px 16px',
-                        border: 'none',
-                        borderRadius: '2px',
-                        margin: '0px 10px 5px 0px',
-                        position: 'relative',
-                      }}
-                    >
-                      {s[label]}
-                      {checkedPic}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </>
-          ) : (
-            <div
-              className="initClass"
-              onClick={handleFocus}
-              style={{
-                height: '37px',
-                lineHeight: '37px',
-                display: 'flex',
-                flexWrap: 'wrap',
-                fontSize: '14px',
-                color: '#aaa',
-              }}
-            >
-              {placeholder}
-            </div>
-          )}
-        </Form.Item>
-      </Form>
+      <Form.Item label={fieldLabel} name={fieldName} rules={rules}>
+        {selected.length > 0 ? (
+          <>
+            {selected.length > 1 ? (
+              <div
+                className="selectedClass"
+                onClick={handleFocus}
+                style={{
+                  overflow: 'auto',
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                }}
+              >
+                {selected.map((s) => (
+                  <div
+                    key={s[uniqueId]}
+                    style={{
+                      fontSize: '14px',
+                      color: '#1677ff',
+                      background: '#e7f1ff',
+                      height: '22px',
+                      padding: '8px 16px',
+                      border: 'none',
+                      borderRadius: '2px',
+                      margin: '0px 10px 5px 0px',
+                      position: 'relative',
+                    }}
+                  >
+                    {s[label]}
+                    {checkedPic}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div
+                className="selectedClass"
+                onClick={handleFocus}
+                style={{ height: '22px', display: 'flex', flexWrap: 'wrap' }}
+              >
+                {selected.map((s) => (
+                  <div
+                    key={s[uniqueId]}
+                    style={{
+                      fontSize: '14px',
+                      color: '#1677ff',
+                      background: '#e7f1ff',
+                      height: '22px',
+                      padding: '8px 16px',
+                      border: 'none',
+                      borderRadius: '2px',
+                      margin: '0px 10px 5px 0px',
+                      position: 'relative',
+                    }}
+                  >
+                    {s[label]}
+                    {checkedPic}
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          <div
+            className="initClass"
+            onClick={handleFocus}
+            style={{
+              height: '37px',
+              lineHeight: '37px',
+              display: 'flex',
+              flexWrap: 'wrap',
+              fontSize: '14px',
+              color: '#aaa',
+            }}
+          >
+            {placeholder}
+          </div>
+        )}
+      </Form.Item>
 
       <Popup
         visible={visible}
@@ -457,5 +442,3 @@ const CustomSelector = (props) =>{
     </div>
   );
 }
-export default CustomSelector
-

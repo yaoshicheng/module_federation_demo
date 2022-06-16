@@ -14,7 +14,8 @@
     "css-loader": "^6.7.1",
     "lodash": "^4.17.21",
     "react-query": "^3.34.16",
-    "style-loader": "^3.3.1"
+    "style-loader": "^3.3.1",
+    "@xforceplus/standard-http-request": "^3.1.6"
   },
   "devDependencies": {
     "@babel/core": "^7.14.3",
